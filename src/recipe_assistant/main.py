@@ -1,8 +1,9 @@
 from datetime import date
 from dotenv import load_dotenv
-from pydantic_ai import Agent
+from pydantic_ai import Agent, RunContext
 
 from .models import Recipe
+from .deps import RecipeDeps
 
 load_dotenv()
 agent = Agent(
@@ -16,6 +17,7 @@ agent = Agent(
         "con temas de cocina.",
     output_type=Recipe|str,
     retries=3,
+    deps_type=RecipeDeps,
 )
 
 
@@ -31,8 +33,19 @@ def add_season() -> str:
            "de temporada.")
 
 
+@agent.tool
+def get_available_ingredients(ctx: RunContext[RecipeDeps]) -> list[str]:
+    "Return available ingredients"
+    return ctx.deps.available_ingredients
+
+
 def main() -> None:
-    result = agent.run_sync("Qué puedo cocinar con arroz y pollo en esta época del año?")
+    result = agent.run_sync(
+        "Qué puedo cocinar con lo que tengo disponible?",
+        deps=RecipeDeps(
+            available_ingredients=["arroz", "pollo", "cebolla", "ajo", "tomate", "huevos"]
+        ),
+    )
     if isinstance(result.output, Recipe):
         print(result.output.name)
         print(result.output.ingredients)
