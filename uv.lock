@@ -1382,14 +1382,18 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "dotenv" },
+    { name = "logfire" },
     { name = "pydantic-ai" },
+    { name = "pydantic-evals" },
     { name = "python-dotenv" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "dotenv", specifier = ">=0.9.9" },
+    { name = "logfire", specifier = ">=5.1.1" },
     { name = "pydantic-ai", specifier = ">=2.51.0" },
+    { name = "pydantic-evals", specifier = ">=2.51.0" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
 ]
 

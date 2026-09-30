@@ -1,4 +1,5 @@
 import asyncio
+import logfire
 
 from datetime import date
 from dotenv import load_dotenv
@@ -8,6 +9,8 @@ from .models import Recipe
 from .deps import RecipeDeps
 
 load_dotenv()
+logfire.configure()
+logfire.instrument_pydantic_ai()
 agent = Agent(
     "google:gemini-3.6-flash",
     instructions="Eres un asistente de cocina. Recomiendas recetas según los"
@@ -21,7 +24,9 @@ agent = Agent(
     retries=3,
     deps_type=RecipeDeps,
 )
-
+deps = RecipeDeps(
+    available_ingredients=['arroz', 'pollo', 'cebolla', 'ajo', 'tomate', 'huevos']
+)
 
 @agent.instructions
 def add_season() -> str:
@@ -42,9 +47,6 @@ def get_available_ingredients(ctx: RunContext[RecipeDeps]) -> list[str]:
 
 
 async def chat_loop() -> None:
-    deps=RecipeDeps(
-        available_ingredients=["arroz", "pollo", "cebolla", "ajo", "tomate", "huevos"]
-    )
     message_history = None
 
     while True:
