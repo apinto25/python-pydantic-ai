@@ -1,3 +1,5 @@
+import asyncio
+
 from datetime import date
 from dotenv import load_dotenv
 from pydantic_ai import Agent, RunContext
@@ -39,7 +41,7 @@ def get_available_ingredients(ctx: RunContext[RecipeDeps]) -> list[str]:
     return ctx.deps.available_ingredients
 
 
-def main() -> None:
+async def chat_loop() -> None:
     deps=RecipeDeps(
         available_ingredients=["arroz", "pollo", "cebolla", "ajo", "tomate", "huevos"]
     )
@@ -51,16 +53,30 @@ def main() -> None:
         if user_message.lower() in ("salir", "exit"):
             break
 
-        result = agent.run_sync(
+        async with agent.run_stream(
             user_message,
             deps=deps,
             message_history=message_history
-        )
-        if isinstance(result.output, Recipe):
-            print(result.output.name)
-            print(result.output.ingredients)
-            print(result.output.steps)
-        else:
-            print(result.output)
+        ) as result:
 
-        message_history = result.all_messages()
+            print("Asistente: ", end="")
+            previous_text = ""
+
+            async for output in result.stream_output(debounce_by=0.01):
+                if isinstance(output, str):
+                    print(output[len(previous_text):], end="", flush=True)
+                    previous_text = output
+
+            final_output = await result.get_output()
+            
+            if isinstance(final_output, Recipe):
+                print(final_output.name)
+                print(final_output.ingredients)
+                print(final_output.steps)
+            else:
+                print()
+
+            message_history = result.all_messages()
+
+def main() -> None:
+    asyncio.run(chat_loop())
