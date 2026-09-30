@@ -40,15 +40,27 @@ def get_available_ingredients(ctx: RunContext[RecipeDeps]) -> list[str]:
 
 
 def main() -> None:
-    result = agent.run_sync(
-        "Qué puedo cocinar con lo que tengo disponible?",
-        deps=RecipeDeps(
-            available_ingredients=["arroz", "pollo", "cebolla", "ajo", "tomate", "huevos"]
-        ),
+    deps=RecipeDeps(
+        available_ingredients=["arroz", "pollo", "cebolla", "ajo", "tomate", "huevos"]
     )
-    if isinstance(result.output, Recipe):
-        print(result.output.name)
-        print(result.output.ingredients)
-        print(result.output.steps)
-    else:
-        print(result.output)
+    message_history = None
+
+    while True:
+        user_message = input("Tu: ")
+
+        if user_message.lower() in ("salir", "exit"):
+            break
+
+        result = agent.run_sync(
+            user_message,
+            deps=deps,
+            message_history=message_history
+        )
+        if isinstance(result.output, Recipe):
+            print(result.output.name)
+            print(result.output.ingredients)
+            print(result.output.steps)
+        else:
+            print(result.output)
+
+        message_history = result.all_messages()
